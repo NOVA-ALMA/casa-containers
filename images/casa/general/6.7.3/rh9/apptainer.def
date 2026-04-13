@@ -1,0 +1,31 @@
+Bootstrap: docker
+From: ghcr.io/nova-alma/casa-base:rh9
+
+%arguments
+    CASA_VERSION=6.7.3
+    CASA_BUILD=17
+    PYTHON_VERSION=3.12
+    PLATFORM=el9
+
+%files
+    common/install.sh /tmp/install.sh
+
+%post
+    chmod +x /tmp/install.sh
+    export CASA_VERSION="{{ CASA_VERSION }}"
+    export CASA_BUILD="{{ CASA_BUILD }}"
+    export PYTHON_VERSION="{{ PYTHON_VERSION }}"
+    export PLATFORM="{{ PLATFORM }}"
+    /tmp/install.sh
+    rm /tmp/install.sh
+
+%environment
+    export PATH="/opt/casa/bin:${PATH}"
+
+%labels
+    org.opencontainers.image.source https://github.com/NOVA-ALMA/casa-containers
+    org.opencontainers.image.description CASA general {{ CASA_VERSION }} on Rocky Linux 9
+    org.opencontainers.image.version {{ CASA_VERSION }}
+
+%runscript
+    exec /opt/casa/bin/casa --nologger --log2term "$@"

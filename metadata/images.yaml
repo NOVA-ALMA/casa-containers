@@ -1,0 +1,20 @@
+registry: ghcr.io/nova-alma
+
+images:
+  base:
+    name: casa-base
+    platforms:
+      - rh8
+      - rh9
+
+  general:
+    name: casa
+    platforms:
+      - rh8
+      - rh9
+
+  pipeline:
+    alma:
+      name: casa-pipeline-alma
+      platforms:
+        - rh8
