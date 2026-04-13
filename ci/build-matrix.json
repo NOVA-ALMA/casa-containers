@@ -1,0 +1,9 @@
+[
+  {"type": "base", "platform": "rh8"},
+  {"type": "base", "platform": "rh9"},
+  {"type": "general", "version": "6.7.3", "platform": "rh8"},
+  {"type": "general", "version": "6.7.3", "platform": "rh9"},
+  {"type": "general", "version": "6.6.5", "platform": "rh8"},
+  {"type": "general", "version": "6.6.5", "platform": "rh9"},
+  {"type": "pipeline", "variant": "alma", "version": "6.6.6-18", "platform": "rh8"}
+]

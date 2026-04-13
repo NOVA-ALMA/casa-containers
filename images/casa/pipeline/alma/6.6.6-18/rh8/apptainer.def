@@ -1,0 +1,27 @@
+Bootstrap: docker
+From: ghcr.io/nova-alma/casa-base:rh8
+
+%arguments
+    CASA_VERSION=6.6.6-18
+    PLATFORM=el8
+
+%files
+    common/install_pipeline.sh /tmp/install_pipeline.sh
+
+%post
+    chmod +x /tmp/install_pipeline.sh
+    export CASA_VERSION="{{ CASA_VERSION }}"
+    export PLATFORM="{{ PLATFORM }}"
+    /tmp/install_pipeline.sh
+    rm /tmp/install_pipeline.sh
+
+%environment
+    export PATH="/opt/casa/bin:${PATH}"
+
+%labels
+    org.opencontainers.image.source https://github.com/NOVA-ALMA/casa-containers
+    org.opencontainers.image.description ALMA pipeline CASA {{ CASA_VERSION }} on Rocky Linux 8
+    org.opencontainers.image.version {{ CASA_VERSION }}
+
+%runscript
+    exec /opt/casa/bin/casa --pipeline --nologger --log2term "$@"
