@@ -46,7 +46,8 @@ jobs:
       - name: Load build matrix
         id: set-matrix
         run: |
-          matrix=$(cat ci/build-matrix.json | jq -c '.')
+          # Extract only the active "include" array; "disabled" entries are ignored.
+          matrix=$(jq -c '.include' ci/build-matrix.json)
           echo "matrix=${matrix}" >> "${GITHUB_OUTPUT}"
 
   build:
