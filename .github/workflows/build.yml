@@ -38,7 +38,8 @@ jobs:
     name: Prepare build matrix
     runs-on: ubuntu-latest
     outputs:
-      matrix: ${{ steps.set-matrix.outputs.matrix }}
+      base_matrix: ${{ steps.set-matrix.outputs.base_matrix }}
+      other_matrix: ${{ steps.set-matrix.outputs.other_matrix }}
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
@@ -46,22 +47,25 @@ jobs:
       - name: Load build matrix
         id: set-matrix
         run: |
-          # Extract only the active "include" array; "disabled" entries are ignored.
-          matrix=$(jq -c '.include' ci/build-matrix.json)
-          echo "matrix=${matrix}" >> "${GITHUB_OUTPUT}"
+          # Split the active "include" array into base and non-base entries.
+          # "disabled" entries are ignored entirely.
+          base_matrix=$(jq -c '[.include[] | select(.type == "base")]' ci/build-matrix.json)
+          other_matrix=$(jq -c '[.include[] | select(.type != "base")]' ci/build-matrix.json)
+          echo "base_matrix=${base_matrix}" >> "${GITHUB_OUTPUT}"
+          echo "other_matrix=${other_matrix}" >> "${GITHUB_OUTPUT}"
 
   build_base:
     name: Build base / ${{ matrix.platform }}
     needs: prepare
     runs-on: ubuntu-latest
-    if: matrix.type == 'base'
+    if: ${{ needs.prepare.outputs.base_matrix != '[]' }}
     permissions:
       contents: read
       packages: write
     strategy:
       fail-fast: false
       matrix:
-        include: ${{ fromJson(needs.prepare.outputs.matrix) }}
+        include: ${{ fromJson(needs.prepare.outputs.base_matrix) }}
 
     steps:
       - name: Checkout repository
@@ -92,14 +96,14 @@ jobs:
     name: Build ${{ matrix.type }} / ${{ matrix.version || '' }} / ${{ matrix.platform }}
     needs: [prepare, build_base]
     runs-on: ubuntu-latest
-    if: ${{ always() && (needs.build_base.result == 'success' || needs.build_base.result == 'skipped') && matrix.type != 'base' }}
+    if: ${{ always() && (needs.build_base.result == 'success' || needs.build_base.result == 'skipped') && needs.prepare.outputs.other_matrix != '[]' }}
     permissions:
       contents: read
       packages: write
     strategy:
       fail-fast: false
       matrix:
-        include: ${{ fromJson(needs.prepare.outputs.matrix) }}
+        include: ${{ fromJson(needs.prepare.outputs.other_matrix) }}
 
     steps:
       - name: Checkout repository
