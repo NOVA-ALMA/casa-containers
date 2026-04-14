@@ -4,7 +4,7 @@
 BASE_URL=https://casa.nrao.edu/download/distro/casa/releaseprep
 
 # Update CASA_PACKAGE to end with .tar.xz
-CASA_PACKAGE="casa-6.7.3-20.tar.xz"
+CASA_PACKAGE="casa-6.7.3-20-py3.12.el8"
 
 # Construct DISTRO_URL
 DISTRO_URL="${BASE_URL}/${CASA_PACKAGE}"
