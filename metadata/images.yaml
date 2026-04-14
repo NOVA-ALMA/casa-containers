@@ -5,16 +5,17 @@ images:
     name: casa-base
     platforms:
       - rh8
-      - rh9
+      # - rh9  # Uncomment to re-enable Rocky Linux 9 / RHEL 9 base image
 
   general:
     name: casa
     platforms:
       - rh8
-      - rh9
+      # - rh9  # Uncomment to re-enable Rocky Linux 9 / RHEL 9 general images
 
   pipeline:
     alma:
       name: casa-pipeline-alma
       platforms:
         - rh8
+        # - rh9  # Uncomment to re-enable Rocky Linux 9 / RHEL 9 pipeline images

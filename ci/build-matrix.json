@@ -1,9 +1,17 @@
-[
-  {"type": "base", "platform": "rh8"},
-  {"type": "base", "platform": "rh9"},
-  {"type": "general", "version": "6.7.3", "platform": "rh8"},
-  {"type": "general", "version": "6.7.3", "platform": "rh9"},
-  {"type": "general", "version": "6.6.5", "platform": "rh8"},
-  {"type": "general", "version": "6.6.5", "platform": "rh9"},
-  {"type": "pipeline", "variant": "alma", "version": "6.6.6-18", "platform": "rh8"}
-]
+{
+  "_comment": "Only 'include' entries are built by CI. Move entries from 'disabled' back to 'include' to re-enable them.",
+
+  "include": [
+    {"type": "base",     "platform": "rh8"},
+    {"type": "pipeline", "variant": "alma", "version": "6.7.3-20", "platform": "rh8"}
+  ],
+
+  "disabled": [
+    {"type": "base",     "platform": "rh9",                             "_note": "Re-enable when Rocky Linux 9 / RHEL 9 support is needed"},
+    {"type": "general",  "version": "6.7.3", "platform": "rh8",        "_note": "Re-enable when general (non-pipeline) CASA 6.7.3 rh8 image is needed"},
+    {"type": "general",  "version": "6.7.3", "platform": "rh9",        "_note": "Re-enable when general (non-pipeline) CASA 6.7.3 rh9 image is needed"},
+    {"type": "general",  "version": "6.6.5", "platform": "rh8",        "_note": "Re-enable when general CASA 6.6.5 rh8 image is needed"},
+    {"type": "general",  "version": "6.6.5", "platform": "rh9",        "_note": "Re-enable when general CASA 6.6.5 rh9 image is needed"},
+    {"type": "pipeline", "variant": "alma",  "version": "6.6.6-18", "platform": "rh8", "_note": "Previous ALMA pipeline release; re-enable if still required"}
+  ]
+}
