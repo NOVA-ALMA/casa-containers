@@ -1,0 +1,137 @@
+name: Build and Push Container Images
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - 'images/**'
+      - 'ci/**'
+      - 'metadata/**'
+      - '.github/workflows/build.yml'
+  pull_request:
+    branches:
+      - main
+    paths:
+      - 'images/**'
+      - 'ci/**'
+      - 'metadata/**'
+      - '.github/workflows/build.yml'
+  workflow_dispatch:
+    inputs:
+      push_images:
+        description: 'Push images to registry after build'
+        required: false
+        default: 'false'
+        type: boolean
+
+# Minimal default permissions for all jobs; individual jobs that need to push
+# to ghcr.io override this with packages:write (see the build job below).
+permissions:
+  contents: read
+
+env:
+  REGISTRY: ghcr.io/nova-alma
+
+jobs:
+  prepare:
+    name: Prepare build matrix
+    runs-on: ubuntu-latest
+    outputs:
+      matrix: ${{ steps.set-matrix.outputs.matrix }}
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Load build matrix
+        id: set-matrix
+        run: |
+          # Extract only the active "include" array; "disabled" entries are ignored.
+          matrix=$(jq -c '.include' ci/build-matrix.json)
+          echo "matrix=${matrix}" >> "${GITHUB_OUTPUT}"
+
+  build_base:
+    name: Build base / ${{ matrix.platform }}
+    needs: prepare
+    runs-on: ubuntu-latest
+    if: matrix.type == 'base'
+    permissions:
+      contents: read
+      packages: write
+    strategy:
+      fail-fast: false
+      matrix:
+        include: ${{ fromJson(needs.prepare.outputs.matrix) }}
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Log in to GitHub Container Registry
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Build base image
+        run: |
+          bash ci/scripts/build.sh base "${{ matrix.platform }}"
+
+      - name: Push base image
+        if: |
+          github.event_name != 'pull_request' &&
+          (github.ref == 'refs/heads/main' || github.event.inputs.push_images == 'true')
+        run: |
+          bash ci/scripts/push.sh base "${{ matrix.platform }}"
+
+  build:
+    name: Build ${{ matrix.type }} / ${{ matrix.version || '' }} / ${{ matrix.platform }}
+    needs: [prepare, build_base]
+    runs-on: ubuntu-latest
+    if: ${{ always() && (needs.build_base.result == 'success' || needs.build_base.result == 'skipped') && matrix.type != 'base' }}
+    permissions:
+      contents: read
+      packages: write
+    strategy:
+      fail-fast: false
+      matrix:
+        include: ${{ fromJson(needs.prepare.outputs.matrix) }}
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Log in to GitHub Container Registry
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Build general image
+        if: matrix.type == 'general'
+        run: |
+          bash ci/scripts/build.sh general "${{ matrix.platform }}" "${{ matrix.version }}"
+
+      - name: Build pipeline image
+        if: matrix.type == 'pipeline'
+        run: |
+          bash ci/scripts/build.sh pipeline "${{ matrix.platform }}" "${{ matrix.version }}" "${{ matrix.variant }}"
+
+      - name: Push image
+        if: |
+          github.event_name != 'pull_request' &&
+          (github.ref == 'refs/heads/main' || github.event.inputs.push_images == 'true')
+        run: |
+          bash ci/scripts/push.sh \
+            "${{ matrix.type }}" \
+            "${{ matrix.platform }}" \
+            "${{ matrix.version || '' }}" \
+            "${{ matrix.variant || '' }}"
