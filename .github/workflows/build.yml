@@ -70,9 +70,6 @@ jobs:
         uses: docker/setup-buildx-action@v3
 
       - name: Log in to GitHub Container Registry
-        if: |
-          github.event_name != 'pull_request' ||
-          (github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name == github.repository)
         uses: docker/login-action@v3
         with:
           registry: ghcr.io
@@ -83,6 +80,14 @@ jobs:
         if: matrix.type == 'base'
         run: |
           bash ci/scripts/build.sh base "${{ matrix.platform }}"
+
+      - name: Push base image (only main or manual)
+        if: |
+          matrix.type == 'base' &&
+          github.event_name != 'pull_request' &&
+          (github.ref == 'refs/heads/main' || github.event.inputs.push_images == 'true')
+        run: |
+          bash ci/scripts/push.sh base "${{ matrix.platform }}"
 
       - name: Build general image
         if: matrix.type == 'general'
