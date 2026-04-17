@@ -3,6 +3,8 @@
 
   "include": [
     {"type": "base",     "platform": "rh8"},
+    {"type": "base",     "platform": "alma8"},
+    {"type": "base",     "platform": "rockylinux8"},
     {"type": "pipeline", "variant": "alma", "version": "6.7.3-20", "platform": "rh8"}
   ],
 
