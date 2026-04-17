@@ -1,6 +1,6 @@
-FROM registry.access.redhat.com/ubi8/ubi-minimal:8
+FROM almalinux:8
 
-RUN microdnf install -y \
+RUN dnf install -y \
         wget \
         which \
         xorg-x11-server-Xvfb \
@@ -14,7 +14,7 @@ RUN microdnf install -y \
         liberation-fonts \
         python3 \
         python3-pip \
-    && microdnf clean all
+    && dnf clean all
 
 LABEL org.opencontainers.image.source="https://github.com/NOVA-ALMA/casa-containers"
-LABEL org.opencontainers.image.description="Base Red Hat UBI 8 Minimal image for CASA containers"
+LABEL org.opencontainers.image.description="Base AlmaLinux 8 image for CASA containers"
