@@ -8,6 +8,8 @@
 #   build.sh base rh8
 #   build.sh general rh8 6.7.3
 #   build.sh pipeline rh8 6.6.6-18 alma
+#   build.sh dev rh8 6.7.3-21
+#   build.sh dev rh9 6.7.3-21
 #
 # Environment variables:
 #   REGISTRY   - Container registry (default: ghcr.io/nova-alma)
@@ -45,8 +47,18 @@ case "${TYPE}" in
     IMAGE_NAME="${REGISTRY}/casa-pipeline-${VARIANT}:${VERSION}-${PLATFORM}"
     BUILD_ARGS="--build-arg CASA_VERSION=${VERSION}"
     ;;
+  dev)
+    [[ -z "${VERSION}" ]] && { echo "Error: version required for type=dev"; exit 1; }
+    # VERSION format: <X.Y.Z>-<build>, e.g. 6.7.3-21
+    CASA_VERSION="${VERSION%-*}"
+    CASA_BUILD="${VERSION##*-}"
+    CONTEXT="${IMAGES_DIR}/dev/${CASA_VERSION}-${CASA_BUILD}"
+    DOCKERFILE="${CONTEXT}/${PLATFORM}/Dockerfile"
+    IMAGE_NAME="${REGISTRY}/casa-dev:${CASA_VERSION}-${CASA_BUILD}-${PLATFORM}"
+    BUILD_ARGS="--build-arg CASA_VERSION=${CASA_VERSION} --build-arg CASA_BUILD=${CASA_BUILD}"
+    ;;
   *)
-    echo "Error: unknown type '${TYPE}'. Must be base, general, or pipeline."
+    echo "Error: unknown type '${TYPE}'. Must be base, general, pipeline, or dev."
     exit 1
     ;;
 esac
