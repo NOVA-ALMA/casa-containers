@@ -36,9 +36,10 @@ case "${TYPE}" in
     ;;
   dev)
     [[ -z "${VERSION}" ]] && { echo "Error: version required for type=dev"; exit 1; }
+    # Tag convention: ghcr.io/nova-alma/casa-dev-<platform>:<X.Y.Z>-<build>
     CASA_VERSION="${VERSION%-*}"
     CASA_BUILD="${VERSION##*-}"
-    IMAGE_NAME="${REGISTRY}/casa-dev:${CASA_VERSION}-${CASA_BUILD}-${PLATFORM}"
+    IMAGE_NAME="${REGISTRY}/casa-dev-${PLATFORM}:${CASA_VERSION}-${CASA_BUILD}"
     ;;
   *)
     echo "Error: unknown type '${TYPE}'. Must be base, general, pipeline, or dev."
