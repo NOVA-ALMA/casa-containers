@@ -35,31 +35,6 @@ set -euo pipefail
 DISTRO="${DISTRO:-rh8}"
 STRICT_PREREQS="${STRICT_PREREQS:-false}"
 
-# ── EPEL ─────────────────────────────────────────────────────────────────────
-# EPEL is required for packages such as ImageMagick and xorg-x11-server-Xvfb.
-# On AlmaLinux 8 and Rocky Linux 8 epel-release is available in the default
-# repos.  On RHEL/UBI 8 it is absent; fall back to the upstream RPM URL.
-echo "==> Enabling EPEL repository..."
-if ! dnf install -y epel-release; then
-    echo "==> epel-release not in repos; installing from upstream URL..."
-    dnf install -y \
-        "https://dl.fedoraproject.org/pub/epel/epel-release-latest-8.noarch.rpm"
-fi
-
-# ── CASA runtime prerequisites ───────────────────────────────────────────────
-echo "==> Installing CASA runtime prerequisites..."
-dnf install -y \
-    mesa-libGL \
-    glib2 \
-    libnsl \
-    xorg-x11-server-Xvfb \
-    wget \
-    which \
-    xz \
-    perl \
-    git \
-    ImageMagick
-
 # Helper: install packages or URLs that may not be available in all repos.
 # On failure, print a warning and either continue or exit depending on
 # STRICT_PREREQS.
@@ -81,6 +56,50 @@ install_best_effort() {
         exit 1
     fi
 }
+
+# ── EPEL ─────────────────────────────────────────────────────────────────────
+# EPEL is required for packages such as ImageMagick and xorg-x11-server-Xvfb.
+# On AlmaLinux 8 and Rocky Linux 8 epel-release is available in the default
+# repos.  On RHEL/UBI 8 it is absent; fall back to the upstream RPM URL.
+echo "==> Enabling EPEL repository..."
+if ! dnf install -y epel-release; then
+    echo "==> epel-release not in repos; installing from upstream URL..."
+    dnf install -y \
+        "https://dl.fedoraproject.org/pub/epel/epel-release-latest-8.noarch.rpm"
+fi
+
+# ── CASA runtime prerequisites ───────────────────────────────────────────────
+echo "==> Installing CASA runtime prerequisites..."
+
+# Core packages that are expected to be available on all EL8 variants.
+dnf install -y \
+    mesa-libGL \
+    glib2 \
+    wget \
+    which \
+    xz \
+    perl \
+    git \
+    ImageMagick
+
+# Packages that are unavailable on UBI8 without RHEL entitlements:
+#   libnsl          – in BaseOS on Alma/Rocky but absent from public UBI repos
+#   xorg-x11-server-Xvfb – in EPEL, but EPEL may not resolve on unregistered UBI
+# For rh8 (UBI8): install best-effort so the build warns rather than fails.
+# For alma8/rockylinux8: install strictly (these repos carry the packages).
+if [[ "${DISTRO}" == "rh8" ]]; then
+    echo "==> NOTE: rh8 (UBI8) may not provide all runtime packages without"
+    echo "    RHEL entitlements.  Installing libnsl and xorg-x11-server-Xvfb"
+    echo "    best-effort (set STRICT_PREREQS=true to fail on missing packages)."
+    echo "    For full support, use the alma8 or rockylinux8 dev images:"
+    echo "      ghcr.io/nova-alma/casa-dev-alma8:<version>"
+    echo "      ghcr.io/nova-alma/casa-dev-rockylinux8:<version>"
+    install_best_effort libnsl xorg-x11-server-Xvfb
+else
+    # Alma/Rocky carry these packages; keep strict failure so regressions
+    # are caught immediately.
+    dnf install -y libnsl xorg-x11-server-Xvfb
+fi
 
 # ── casacore / libsakura prerequisites (TEMPORARILY SKIPPED) ────────────────
 # The following package groups are temporarily not installed to avoid build
