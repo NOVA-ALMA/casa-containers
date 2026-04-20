@@ -6,6 +6,28 @@ ARG CASA_BUILD=21
 ARG PYTHON_VERSION=3.12
 ARG PLATFORM=el9
 
+# Enable EPEL on EL9 and install CASA runtime prerequisites.
+# The base image already provides wget, which, xorg-x11-server-Xvfb,
+# mesa-libGL, so only the remaining packages are added here.
+# On RHEL/UBI 9 epel-release may not be in the default repos; fall back to
+# the upstream RPM URL when needed.
+RUN dnf install -y epel-release || \
+        dnf install -y \
+            "https://dl.fedoraproject.org/pub/epel/epel-release-latest-9.noarch.rpm"
+
+RUN dnf install -y \
+        mesa-libGL \
+        glib2 \
+        libnsl \
+        xorg-x11-server-Xvfb \
+        wget \
+        which \
+        xz \
+        perl \
+        git \
+        ImageMagick \
+    && dnf clean all
+
 COPY common/install_dev.sh /tmp/install_dev.sh
 RUN chmod +x /tmp/install_dev.sh \
     && CASA_VERSION=${CASA_VERSION} \

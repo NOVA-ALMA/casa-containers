@@ -35,6 +35,31 @@ set -euo pipefail
 DISTRO="${DISTRO:-rh8}"
 STRICT_PREREQS="${STRICT_PREREQS:-false}"
 
+# ── EPEL ─────────────────────────────────────────────────────────────────────
+# EPEL is required for packages such as ImageMagick and xorg-x11-server-Xvfb.
+# On AlmaLinux 8 and Rocky Linux 8 epel-release is available in the default
+# repos.  On RHEL/UBI 8 it is absent; fall back to the upstream RPM URL.
+echo "==> Enabling EPEL repository..."
+if ! dnf install -y epel-release; then
+    echo "==> epel-release not in repos; installing from upstream URL..."
+    dnf install -y \
+        "https://dl.fedoraproject.org/pub/epel/epel-release-latest-8.noarch.rpm"
+fi
+
+# ── CASA runtime prerequisites ───────────────────────────────────────────────
+echo "==> Installing CASA runtime prerequisites..."
+dnf install -y \
+    mesa-libGL \
+    glib2 \
+    libnsl \
+    xorg-x11-server-Xvfb \
+    wget \
+    which \
+    xz \
+    perl \
+    git \
+    ImageMagick
+
 # Helper: install packages or URLs that may not be available in all repos.
 # On failure, print a warning and either continue or exit depending on
 # STRICT_PREREQS.
