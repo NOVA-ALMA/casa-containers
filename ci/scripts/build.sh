@@ -50,11 +50,12 @@ case "${TYPE}" in
   dev)
     [[ -z "${VERSION}" ]] && { echo "Error: version required for type=dev"; exit 1; }
     # VERSION format: <X.Y.Z>-<build>, e.g. 6.7.3-21
+    # Tag convention: ghcr.io/nova-alma/casa-dev-<platform>:<X.Y.Z>-<build>
     CASA_VERSION="${VERSION%-*}"
     CASA_BUILD="${VERSION##*-}"
     CONTEXT="${IMAGES_DIR}/dev/${CASA_VERSION}-${CASA_BUILD}"
     DOCKERFILE="${CONTEXT}/${PLATFORM}/Dockerfile"
-    IMAGE_NAME="${REGISTRY}/casa-dev:${CASA_VERSION}-${CASA_BUILD}-${PLATFORM}"
+    IMAGE_NAME="${REGISTRY}/casa-dev-${PLATFORM}:${CASA_VERSION}-${CASA_BUILD}"
     BUILD_ARGS="--build-arg CASA_VERSION=${CASA_VERSION} --build-arg CASA_BUILD=${CASA_BUILD}"
     ;;
   *)

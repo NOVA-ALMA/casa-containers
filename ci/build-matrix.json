@@ -5,7 +5,10 @@
     {"type": "base",     "platform": "rh8"},
     {"type": "base",     "platform": "alma8"},
     {"type": "base",     "platform": "rockylinux8"},
-    {"type": "pipeline", "variant": "alma", "version": "6.7.3-20", "platform": "rh8"}
+    {"type": "pipeline", "variant": "alma", "version": "6.7.3-20", "platform": "rh8"},
+    {"type": "dev",      "version": "6.7.3-21", "platform": "alma8"},
+    {"type": "dev",      "version": "6.7.3-21", "platform": "rockylinux8"},
+    {"type": "dev",      "version": "6.7.3-21", "platform": "rh8"}
   ],
 
   "disabled": [
@@ -15,7 +18,6 @@
     {"type": "general",  "version": "6.6.5", "platform": "rh8",        "_note": "Re-enable when general CASA 6.6.5 rh8 image is needed"},
     {"type": "general",  "version": "6.6.5", "platform": "rh9",        "_note": "Re-enable when general CASA 6.6.5 rh9 image is needed"},
     {"type": "pipeline", "variant": "alma",  "version": "6.6.6-18", "platform": "rh8", "_note": "Previous ALMA pipeline release; re-enable if still required"},
-    {"type": "dev",      "version": "6.7.3-21", "platform": "rh8",     "_note": "CASA dev build 6.7.3-21 on el8; move to include to enable"},
     {"type": "dev",      "version": "6.7.3-21", "platform": "rh9",     "_note": "CASA dev build 6.7.3-21 on el9; move to include to enable"}
   ]
 }
