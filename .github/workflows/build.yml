@@ -129,6 +129,11 @@ jobs:
         run: |
           bash ci/scripts/build.sh pipeline "${{ matrix.platform }}" "${{ matrix.version }}" "${{ matrix.variant }}"
 
+      - name: Build dev image
+        if: matrix.type == 'dev'
+        run: |
+          bash ci/scripts/build.sh dev "${{ matrix.platform }}" "${{ matrix.version }}"
+
       - name: Push image
         if: |
           github.event_name != 'pull_request' &&

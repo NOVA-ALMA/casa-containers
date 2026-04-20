@@ -8,6 +8,7 @@
 #   push.sh base rh8
 #   push.sh general rh8 6.7.3
 #   push.sh pipeline rh8 6.6.6-18 alma
+#   push.sh dev rh8 6.7.3-21
 #
 # Environment variables:
 #   REGISTRY - Container registry (default: ghcr.io/nova-alma)
@@ -33,8 +34,15 @@ case "${TYPE}" in
     [[ -z "${VARIANT}" ]] && { echo "Error: variant required for type=pipeline"; exit 1; }
     IMAGE_NAME="${REGISTRY}/casa-pipeline-${VARIANT}:${VERSION}-${PLATFORM}"
     ;;
+  dev)
+    [[ -z "${VERSION}" ]] && { echo "Error: version required for type=dev"; exit 1; }
+    # Tag convention: ghcr.io/nova-alma/casa-dev-<platform>:<X.Y.Z>-<build>
+    CASA_VERSION="${VERSION%-*}"
+    CASA_BUILD="${VERSION##*-}"
+    IMAGE_NAME="${REGISTRY}/casa-dev-${PLATFORM}:${CASA_VERSION}-${CASA_BUILD}"
+    ;;
   *)
-    echo "Error: unknown type '${TYPE}'. Must be base, general, or pipeline."
+    echo "Error: unknown type '${TYPE}'. Must be base, general, pipeline, or dev."
     exit 1
     ;;
 esac
