@@ -25,7 +25,14 @@ CASA_PACKAGE="casa-${CASA_VERSION}-${CASA_BUILD}-py${PYTHON_VERSION}.${PLATFORM}
 DISTRO_URL="${BASE_URL}/${CASA_PACKAGE}"
 
 echo "==> Downloading CASA dev ${CASA_VERSION}-${CASA_BUILD} for ${PLATFORM}..."
-wget -nv "${DISTRO_URL}" -O "/tmp/${CASA_PACKAGE}"
+if command -v curl > /dev/null 2>&1; then
+    curl -fsSL "${DISTRO_URL}" -o "/tmp/${CASA_PACKAGE}"
+elif command -v wget > /dev/null 2>&1; then
+    wget -nv "${DISTRO_URL}" -O "/tmp/${CASA_PACKAGE}"
+else
+    echo "ERROR: Neither curl nor wget is available. Install curl or wget and retry." >&2
+    exit 1
+fi
 
 echo "==> Installing CASA to /opt/casa..."
 mkdir -p /opt/casa
