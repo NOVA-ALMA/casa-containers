@@ -43,16 +43,16 @@ section for RHEL-equivalent platforms:
 
 ### Build toolchain
 
-| Prerequisite | RPM package(s) |
-|---|---|
-| C++ compiler (gcc ≥ 4.9) | `gcc`, `gcc-c++` |
-| Fortran compiler | `gcc-gfortran` |
-| cmake | `cmake` |
-| flex | `flex` |
-| bison | `bison` |
-| pkg-config | `pkgconf-pkg-config` |
-| curl | `curl` |
-| tar | `tar` |
+| Prerequisite | RPM package(s) | rh8 (UBI 8) availability |
+|---|---|---|
+| C++ compiler (gcc ≥ 4.9) | `gcc`, `gcc-c++` | ✅ Available |
+| Fortran compiler | `gcc-gfortran` | ✅ Available |
+| cmake | `cmake` | ✅ Available |
+| flex | `flex` | ⚠️ Best-effort (CRB required on UBI) |
+| bison | `bison` | ⚠️ Best-effort (CRB required on UBI) |
+| pkg-config | `pkgconf-pkg-config` | ✅ Available |
+| curl | `curl` | ✅ Available |
+| tar | `tar` | ✅ Available |
 
 ### Library development headers
 
@@ -127,6 +127,69 @@ on top if GPU support is needed.
 | `alma8` | EPEL 8 (`epel-release`) |
 | `rockylinux8` | EPEL 8 (`epel-release`) |
 | `rh8` | EPEL 8 (from `dl.fedoraproject.org`) |
+
+## rh8 dev image limitations (UBI 8)
+
+The `rh8` dev image is based on **Red Hat Universal Base Image 8 (UBI 8)**,
+which is the only freely redistributable RHEL 8 base.  UBI 8 only exposes
+the **BaseOS** and **AppStream** repositories publicly.  Several CASA build
+prerequisites—notably `flex` and `bison`—live in the
+**CodeReady Builder (CRB)** repository, which requires an active RHEL
+subscription and is **not** available in public UBI builds.
+
+### What this means in practice
+
+| Package | Available on UBI 8 (public)? | Available on Alma/Rocky 8? |
+|---|---|---|
+| gcc, cmake, pkg-config, curl | ✅ Yes | ✅ Yes |
+| flex, bison | ⚠️ **No** (CRB/entitlement required) | ✅ Yes |
+| wcslib-devel | ⚠️ Best-effort via EPEL | ✅ Yes (EPEL) |
+
+When `./ci/scripts/build.sh dev rh8 6.7.3-21` encounters a missing package it
+will print a clear warning and **continue** (non-fatal) rather than aborting
+the build.  The resulting image may be incomplete for CASA source builds.
+
+### Recommended alternatives for full development builds
+
+For a complete CASA-from-source environment, use the **alma8** or
+**rockylinux8** dev images:
+
+```bash
+# Pull the AlmaLinux 8 dev image
+docker pull ghcr.io/nova-alma/casa-dev-alma8:6.7.3-21
+
+# Pull the Rocky Linux 8 dev image
+docker pull ghcr.io/nova-alma/casa-dev-rockylinux8:6.7.3-21
+```
+
+These images enable EPEL 8 and have all CASA6 build prerequisites (including
+`flex`, `bison`, and `wcslib-devel`) installed without any subscription.
+
+### When rh8 (UBI 8) is the right choice
+
+The `rh8` image is the **redistributable** RHEL 8 base.  Use it when:
+- You need a runtime container that can run on entitled RHEL 8 systems.
+- You are building CASA in an **entitled RHEL environment** (add
+  `--subscription-manager` or mount entitlements, then set
+  `STRICT_PREREQS=true` to get hard failures on any missing package).
+- You want a redistributable image that customers/users can run without an
+  AlmaLinux or Rocky Linux base.
+
+For pure development/compilation work without RHEL entitlements, always prefer
+`alma8` or `rockylinux8`.
+
+### STRICT_PREREQS mode
+
+To treat missing best-effort packages as hard failures (useful in entitled
+RHEL CI pipelines), pass `STRICT_PREREQS=true` at build time:
+
+```bash
+docker build \
+  --build-arg DISTRO=rh8 \
+  --build-arg STRICT_PREREQS=true \
+  -f images/casa/dev/6.7.3-21/rh8/Dockerfile \
+  images/casa/dev/6.7.3-21
+```
 
 ## Note: dev vs runtime images
 

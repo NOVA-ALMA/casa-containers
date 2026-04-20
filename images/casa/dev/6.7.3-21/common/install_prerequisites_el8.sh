@@ -5,13 +5,65 @@
 # Bitbucket documentation for RHEL-equivalent platforms.
 #
 # Environment variables:
-#   DISTRO         - One of: alma8, rockylinux8, rh8  (default: rh8)
-#   ENABLE_OPENMPI - Set to "true" to install OpenMPI (default: true)
+#   DISTRO          - One of: alma8, rockylinux8, rh8  (default: rh8)
+#   ENABLE_OPENMPI  - Set to "true" to install OpenMPI (default: true)
+#   STRICT_PREREQS  - Set to "true" to fail if any best-effort packages are
+#                     unavailable (default: false).  Useful when building in
+#                     an entitled RHEL environment.
+#
+# NOTE – rh8 (UBI 8) limitations:
+#   Red Hat Universal Base Image 8 only exposes the BaseOS and AppStream repos
+#   publicly.  Several CASA build prerequisites (e.g. flex, bison) live in the
+#   CodeReady Builder / PowerTools repo, which requires a RHEL subscription and
+#   is NOT available in public UBI builds.  Those packages are installed on a
+#   best-effort basis and will emit a warning rather than a hard failure unless
+#   STRICT_PREREQS=true.
+#   For a complete, hassle-free dev environment use the alma8 or rockylinux8
+#   dev images instead:
+#     ghcr.io/nova-alma/casa-dev-alma8:<version>
+#     ghcr.io/nova-alma/casa-dev-rockylinux8:<version>
 
 set -euo pipefail
 
 DISTRO="${DISTRO:-rh8}"
 ENABLE_OPENMPI="${ENABLE_OPENMPI:-true}"
+STRICT_PREREQS="${STRICT_PREREQS:-false}"
+
+# Helper: install packages that may not be available in all repos.
+# On failure, print a warning and either continue or exit depending on
+# STRICT_PREREQS.
+install_best_effort() {
+    local pkgs=("$@")
+    if dnf install -y "${pkgs[@]}"; then
+        return 0
+    fi
+
+    echo ""
+    echo "##################################################################"
+    echo "WARNING: One or more best-effort packages could not be installed:"
+    echo "  ${pkgs[*]}"
+    echo ""
+    if [[ "${DISTRO}" == "rh8" ]]; then
+        echo "  This is expected on UBI 8 (rh8): packages such as flex and"
+        echo "  bison are only available from the CodeReady Builder repo,"
+        echo "  which requires a RHEL subscription not present in public UBI."
+        echo ""
+        echo "  For a complete CASA build-prerequisite environment use:"
+        echo "    ghcr.io/nova-alma/casa-dev-alma8:<version>"
+        echo "    ghcr.io/nova-alma/casa-dev-rockylinux8:<version>"
+        echo ""
+        echo "  If you have RHEL entitlements, re-run with STRICT_PREREQS=true"
+        echo "  after enabling the CodeReady Builder repo so any missing"
+        echo "  package causes a hard build failure."
+    fi
+    echo "##################################################################"
+    echo ""
+
+    if [[ "${STRICT_PREREQS}" == "true" ]]; then
+        echo "ERROR: STRICT_PREREQS=true – aborting due to missing packages."
+        exit 1
+    fi
+}
 
 echo "==> Configuring extra repositories for ${DISTRO}..."
 
@@ -33,21 +85,29 @@ case "${DISTRO}" in
     ;;
 esac
 
-echo "==> Installing build toolchain (cmake, compilers, flex/bison, pkg-config, curl, tar)..."
+# ── Core toolchain ──────────────────────────────────────────────────────────
+# These packages are available in the UBI 8 BaseOS/AppStream repos and are
+# installed unconditionally on all EL8 platforms.
+echo "==> Installing core build toolchain (compilers, cmake, pkg-config, curl, tar)..."
 dnf install -y \
     gcc \
     gcc-c++ \
     gcc-gfortran \
     cmake \
     make \
-    flex \
-    bison \
     pkgconf-pkg-config \
     curl \
     tar \
     which \
     wget
 
+# ── Best-effort toolchain ────────────────────────────────────────────────────
+# flex and bison live in CodeReady Builder on RHEL 8 (not exposed by UBI).
+# On alma8/rockylinux8 (EPEL+PowerTools) they are available without issue.
+echo "==> Installing best-effort toolchain packages (flex, bison)..."
+install_best_effort flex bison
+
+# ── Library development headers ─────────────────────────────────────────────
 echo "==> Installing library development headers..."
 dnf install -y \
     readline-devel \
@@ -63,9 +123,7 @@ dnf install -y \
     protobuf-compiler
 
 echo "==> Installing wcslib-devel (EPEL)..."
-dnf install -y wcslib-devel \
-  || echo "WARNING: wcslib-devel not available in configured repos; \
-build wcslib from source (https://www.atnf.csiro.au/people/mcalabre/WCS/) if required."
+install_best_effort wcslib-devel
 
 echo "==> Installing Python 3.8 and numpy..."
 dnf install -y python38 python38-devel python38-pip
@@ -93,4 +151,10 @@ fi
 echo "==> Cleaning up..."
 dnf clean all
 
-echo "==> CASA6 build prerequisites installed successfully for ${DISTRO}."
+echo "==> CASA6 build prerequisites install complete for ${DISTRO}."
+if [[ "${DISTRO}" == "rh8" ]]; then
+    echo ""
+    echo "NOTE: This is an rh8 (UBI 8) image.  Some build prerequisites"
+    echo "(e.g. flex, bison) may not have been installed due to UBI repo"
+    echo "restrictions.  See the README for details and alternatives."
+fi

@@ -10,12 +10,17 @@ ARG PYTHON_VERSION=3.8
 ARG PLATFORM=el8
 ARG DISTRO=rh8
 ARG ENABLE_OPENMPI=true
+# STRICT_PREREQS: set to "true" to fail if best-effort packages (e.g. flex,
+# bison) cannot be installed.  Requires RHEL entitlements / CRB repo access.
+# Default is "false" so public UBI 8 CI builds succeed with warnings.
+ARG STRICT_PREREQS=false
 
 # Install CASA6 build prerequisites (compilers, CMake, lib *-devel, Python, etc.)
 COPY common/install_prerequisites_el8.sh /tmp/install_prerequisites_el8.sh
 RUN chmod +x /tmp/install_prerequisites_el8.sh \
     && DISTRO=${DISTRO} \
        ENABLE_OPENMPI=${ENABLE_OPENMPI} \
+       STRICT_PREREQS=${STRICT_PREREQS} \
        /tmp/install_prerequisites_el8.sh \
     && rm /tmp/install_prerequisites_el8.sh
 
