@@ -12,7 +12,10 @@ and published to the GitHub Container Registry at `ghcr.io/nova-alma`.
 | `ghcr.io/nova-alma/casa:<version>-<platform>` | General CASA (manual processing) |
 | `ghcr.io/nova-alma/casa-pipeline-alma:<version>-<platform>` | ALMA pipeline-enabled CASA |
 
-**Platforms:** `rh8` (Rocky Linux 8), `rh9` (Rocky Linux 9)
+**Platforms:** `alma8` (AlmaLinux 8), `rockylinux8` (Rocky Linux 8)
+
+> **Note:** The `rh8` (UBI8/RHEL8) platform is temporarily excluded from the build and publish process.
+> To re-enable it, move the corresponding entries in `ci/build-matrix.json` from `disabled` back to `include`.
 
 ## Pulling an Image
 
