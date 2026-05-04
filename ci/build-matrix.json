@@ -4,6 +4,7 @@
   "include": [
     {"type": "base",     "platform": "alma8"},
     {"type": "base",     "platform": "rockylinux8"},
+    {"type": "base",     "platform": "ubuntu24.04"},
     {"type": "dev",      "version": "6.7.3-21", "platform": "alma8"},
     {"type": "dev",      "version": "6.7.3-21", "platform": "rockylinux8"}
   ],
