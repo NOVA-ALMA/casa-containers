@@ -12,6 +12,7 @@ flavour) and produces an image tagged `ghcr.io/nova-alma/casa-base:<platform>`.
 | `alma8`        | `almalinux:8`                                      | AlmaLinux 8 – RHEL-compatible community distro  |
 | `rockylinux8`  | `rockylinux:8`                                     | Rocky Linux 8 – RHEL-compatible community distro |
 | `rh9`          | `rockylinux:9`                                     | Rocky Linux 9 (disabled in CI by default)       |
+| `ubuntu24.04`  | `ubuntu:24.04`                                     | Ubuntu 24.04 LTS (Noble Numbat) with micromamba and pipeline user |
 
 ## Which UBI base image to use for distributing CASA containers?
 
@@ -53,6 +54,9 @@ bash ci/scripts/build.sh base alma8
 
 # Build the Rocky Linux 8 base image
 bash ci/scripts/build.sh base rockylinux8
+
+# Build the Ubuntu 24.04 base image
+bash ci/scripts/build.sh base ubuntu24.04
 ```
 
 Each command produces a locally tagged image

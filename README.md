@@ -16,6 +16,8 @@ build.sh <type> <platform> [<version>] [<variant>]
 | `pipeline` | CASA pipeline release (e.g. ALMA pipeline)       | `build.sh pipeline rh8 6.6.6-18 alma`        |
 | `dev`      | CASA development/pre-release build from tar.xz   | `build.sh dev rh8 6.7.3-21`                  |
 
+**Base image platforms:** `alma8`, `rockylinux8`, `ubuntu24.04` (and `rh8`, `rh9` — disabled in CI by default)
+
 ### `dev` image type
 
 The `dev` type builds images that install CASA from pre-release tarballs following
